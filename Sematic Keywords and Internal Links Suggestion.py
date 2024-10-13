@@ -1,5 +1,6 @@
 import streamlit as st
 from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
 
 # Streamlit UI
 def main():
@@ -26,7 +27,7 @@ def main():
             st.error(f"Error calculating TF-IDF: {e}")
             return
 
-        feature_names = vectorizer.get_feature_names_out()
+        feature_names = np.array(vectorizer.get_feature_names_out())
 
         # Display top semantic keywords for the content
         st.subheader("Semantic Keywords for the Content")
@@ -43,7 +44,7 @@ def main():
             st.subheader("Optional Keywords Analysis")
             for kw in optional_keywords:
                 if kw in feature_names:
-                    index = feature_names.tolist().index(kw)
+                    index = np.where(feature_names == kw)[0][0]
                     score = tfidf_matrix.toarray()[0][index]
                     st.write(f"- '{kw}' is present in the content with a score of {score:.4f}.")
                 else:
