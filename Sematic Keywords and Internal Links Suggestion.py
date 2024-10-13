@@ -31,16 +31,21 @@ def main():
         # Display top semantic keywords for the content
         st.subheader("Semantic Keywords for the Content")
         tfidf_scores = zip(feature_names, tfidf_matrix.toarray()[0])
-        sorted_keywords = sorted(tfidf_scores, key=lambda x: x[1], reverse=True)[:10]
-        for keyword, score in sorted_keywords:
+        sorted_keywords = sorted(tfidf_scores, key=lambda x: x[1], reverse=True)
+
+        # Display top 10 semantic keywords
+        top_keywords = sorted_keywords[:10]
+        for keyword, score in top_keywords:
             st.write(f"- {keyword}: {score:.4f}")
 
-        # Check if optional keywords are in the content
+        # Check if optional keywords are in the content and their scores
         if optional_keywords:
             st.subheader("Optional Keywords Analysis")
             for kw in optional_keywords:
-                if kw in content:
-                    st.write(f"- '{kw}' is present in the content.")
+                if kw in feature_names:
+                    index = feature_names.tolist().index(kw)
+                    score = tfidf_matrix.toarray()[0][index]
+                    st.write(f"- '{kw}' is present in the content with a score of {score:.4f}.")
                 else:
                     st.write(f"- '{kw}' is NOT present in the content.")
 
