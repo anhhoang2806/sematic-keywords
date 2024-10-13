@@ -7,12 +7,13 @@ from sklearn.metrics.pairwise import cosine_similarity
 # Helper function to extract content from a URL
 def extract_content(url):
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
         paragraphs = soup.find_all('p')
         content = ' '.join([p.get_text() for p in paragraphs])
         return content
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         st.error(f"Error fetching content from {url}: {e}")
         return ""
 
@@ -33,10 +34,18 @@ def main():
         st.info("Extracting content from URLs...")
         contents = [extract_content(url) for url in url_list]
 
+        # Filter out URLs with empty content
+        valid_urls_contents = [(url, content) for url, content in zip(url_list, contents) if content]
+        if not valid_urls_contents:
+            st.error("No valid content found from the provided URLs.")
+            return
+
+        valid_urls, valid_contents = zip(*valid_urls_contents)
+
         # Calculate TF-IDF and cosine similarity
         st.info("Calculating similarity between pages...")
         vectorizer = TfidfVectorizer(stop_words='english')
-        tfidf_matrix = vectorizer.fit_transform(contents)
+        tfidf_matrix = vectorizer.fit_transform(valid_contents)
         similarity_matrix = cosine_similarity(tfidf_matrix)
 
         # Display similarity results
@@ -45,10 +54,10 @@ def main():
 
         # Suggest internal links based on similarity
         st.subheader("Suggested Internal Links")
-        for i in range(len(url_list)):
-            similar_pages = [url_list[j] for j in range(len(url_list)) if i != j and similarity_matrix[i][j] > 0.1]
+        for i in range(len(valid_urls)):
+            similar_pages = [valid_urls[j] for j in range(len(valid_urls)) if i != j and similarity_matrix[i][j] > 0.1]
             if similar_pages:
-                st.write(f"Pages similar to {url_list[i]}:")
+                st.write(f"Pages similar to {valid_urls[i]}:")
                 for page in similar_pages:
                     st.write(f"- {page}")
 
