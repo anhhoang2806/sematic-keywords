@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 # Helper function to extract content from a URL
 def extract_content(url):
@@ -45,8 +46,18 @@ def main():
         # Calculate TF-IDF and cosine similarity
         st.info("Calculating similarity between pages...")
         vectorizer = TfidfVectorizer(stop_words='english')
-        tfidf_matrix = vectorizer.fit_transform(valid_contents)
+        try:
+            tfidf_matrix = vectorizer.fit_transform(valid_contents)
+        except ValueError as e:
+            st.error(f"Error calculating TF-IDF: {e}")
+            return
+
         similarity_matrix = cosine_similarity(tfidf_matrix)
+
+        # Handle case where similarity matrix is empty or invalid
+        if similarity_matrix.size == 0 or np.isnan(similarity_matrix).any():
+            st.error("Error: Similarity calculation resulted in an invalid matrix.")
+            return
 
         # Display similarity results
         st.subheader("Similarity Matrix")
