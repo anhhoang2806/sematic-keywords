@@ -1,1 +1,1 @@
-# sematic-keywords-and-internal-link-suggestions
+# sematic-keywords
